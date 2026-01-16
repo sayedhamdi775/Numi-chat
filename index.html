@@ -70,27 +70,30 @@ body{
 }
 
 .header{
-  padding:0 5px;
+  padding:5px 10px;
   border-bottom:1px solid #ddd;
-  font-size:24px;
-  font-weight:bold;
   background:#3b5bdb;
-  color:White;
-  display : flex;
-  justify-content: space-between;
-  align-items : center;
-
+  color:white;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
-.header p{
- font-family: "Kalam", cursive;
-  font-weight: 700;
-  font-style: normal;
+
+.header-title{
+  flex:1;
+  text-align:center;
+  font-family: "Kalam", cursive;
+  font-weight:700;
+  font-size:20px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .header img{
-width :50px;
-margin-right : 10px;
+  width:42px;
 }
+
 
 .chat-area{
   flex:1;
@@ -176,6 +179,96 @@ margin-right : 10px;
   font-size:15px;
   cursor:pointer;
 }
+
+.sidebar-close{
+  display:none;
+  padding:10px;
+  text-align:left;
+}
+
+.sidebar-close button{
+  background:none;
+  border:none;
+  color:white;
+  font-size:22px;
+  cursor:pointer;
+}
+
+/* يظهر زر الإغلاق في الموبايل فقط */
+@media (max-width: 768px){
+  .sidebar-close{
+    display:block;
+  }
+}
+
+
+/* ===== Mobile Responsive ===== */
+.menu-btn{
+  display:none;
+  font-size:26px;
+  background:none;
+  border:none;
+  color:white;
+  cursor:pointer;
+}
+
+/* موبايل */
+@media (max-width: 768px){
+
+  body{
+    overflow:hidden;
+  }
+
+  .sidebar{
+    position:fixed;
+    left:-260px;
+    top:0;
+    height:100vh;
+    z-index:1000;
+    transition:0.3s ease;
+  }
+
+  .sidebar.open{
+    left:0;
+  }
+
+  .menu-btn{
+    display:block;
+  }
+
+  .main{
+    width:100%;
+  }
+
+  .chat-area{
+    padding:10px;
+  }
+
+  .input-area form{
+    gap:6px;
+  }
+
+  .input-area input{
+    font-size:14px;
+  }
+
+  .input-area button{
+    padding:10px;
+  }
+}
+
+@media (max-width: 768px){
+
+  .header-title{
+    font-size:16px;
+  }
+
+  .header img{
+    width:36px;
+  }
+}
+
+
 </style>
 </head>
 
@@ -183,6 +276,10 @@ margin-right : 10px;
 
 <!-- ===== Sidebar ===== -->
 <div class="sidebar">
+<div class="sidebar-close">
+  <button onclick="toggleSidebar()">✕</button>
+</div>
+
   <div class="new-chat">
     <button onclick="createNewChat()">➕ محادثة جديدة</button>
   </div>
@@ -192,8 +289,13 @@ margin-right : 10px;
 <!-- ===== Main ===== -->
 <div class="main">
   <div class="header">
-<p>Smart Learning Assistant In Math</p>
-  <img src="assistant_logo.png"\>
+ <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+  <div class="header-title">
+    Smart Learning Assistant In Math
+  </div>
+
+  <img src="assistant_logo.png">
 </div>
   <div class="chat-area" id="chatArea"></div>
 
@@ -209,7 +311,7 @@ margin-right : 10px;
 
 <script>
 const webAppUrl =
-"https://script.google.com/macros/s/AKfycbxuenD--XAWb_p9-4_Izg_TLRj3sAMNOKnO9bFUQrgr2RSz87WIq7c2_cOxQXyYtddX/exec";
+"https://script.google.com/macros/s/AKfycbzmmEgJbGvwyCXQIM1wiL0_S95r0VVbyKHXYk2poJvSwedC0PVryh2Yrw237bZqei5N/exec";
 
 let chats = JSON.parse(localStorage.getItem("chats")) || [];
 let currentChat = null;
@@ -327,6 +429,11 @@ function sendMessage(e){
 function save(){
   localStorage.setItem("chats",JSON.stringify(chats));
 }
+
+function toggleSidebar(){
+  document.querySelector(".sidebar").classList.toggle("open");
+}
+
 </script>
 
 </body>
