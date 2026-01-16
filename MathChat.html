@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math AI Assistant</title>
+
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap');
+*{
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  background:#f7f7f8;
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  width:260px;
+  background:#202123;
+  color:white;
+  display:flex;
+  flex-direction:column;
+}
+
+.new-chat{
+  padding:15px;
+  border-bottom:1px solid #444;
+}
+
+.new-chat button{
+  width:100%;
+  padding:10px;
+  background:#3b5bdb;
+  border:none;
+  color:white;
+  font-size:15px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.chat-history{
+  flex:1;
+  overflow-y:auto;
+}
+
+.chat-item{
+  padding:12px 15px;
+  cursor:pointer;
+  border-bottom:1px solid #2f3035;
+  font-size:14px;
+}
+
+.chat-item:hover,
+.chat-item.active{
+  background:#343541;
+}
+
+/* ===== Main ===== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  padding:0 5px;
+  border-bottom:1px solid #ddd;
+  font-size:24px;
+  font-weight:bold;
+  background:#3b5bdb;
+  color:White;
+  display : flex;
+  justify-content: space-between;
+  align-items : center;
+
+}
+.header p{
+ font-family: "Kalam", cursive;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.header img{
+width :50px;
+margin-right : 10px;
+}
+
+.chat-area{
+  flex:1;
+  padding:20px;
+  overflow-y:auto;
+}
+
+/* ===== Messages ===== */
+.message{
+  max-width:800px;
+  margin:0 auto 20px;
+}
+
+.user{
+  background:#e5e7eb;
+  padding:14px;
+  border-radius:8px;
+}
+
+.bot{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:14px;
+}
+
+/* ===== Formatted Answer ===== */
+.formatted{
+  background:#ffffff;
+  border-radius:10px;
+  padding:14px;
+}
+
+.formatted h3{
+  margin:0 0 10px;
+  color:#1e40af;
+}
+
+.step{
+  background:#f1f5ff;
+  padding:8px 10px;
+  border-radius:6px;
+  margin-bottom:6px;
+  font-family: monospace;
+}
+
+.result{
+  background:#dcfce7;
+  padding:10px;
+  border-radius:6px;
+  font-weight:bold;
+  color:#065f46;
+}
+
+/* ===== Input ===== */
+.input-area{
+  border-top:1px solid #ddd;
+  padding:15px;
+  background:white;
+}
+
+.input-area form{
+  max-width:800px;
+  margin:auto;
+  display:flex;
+  gap:10px;
+}
+
+.input-area input{
+  flex:1;
+  padding:12px 15px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+
+.input-area button{
+  padding:12px 20px;
+  border:none;
+  border-radius:8px;
+  background:#3b5bdb;
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== Sidebar ===== -->
+<div class="sidebar">
+  <div class="new-chat">
+    <button onclick="createNewChat()">➕ محادثة جديدة</button>
+  </div>
+  <div class="chat-history" id="chatHistory"></div>
+</div>
+
+<!-- ===== Main ===== -->
+<div class="main">
+  <div class="header">
+<p>Smart Learning Assistant In Math</p>
+  <img src="assistant_logo.png"\>
+</div>
+  <div class="chat-area" id="chatArea"></div>
+
+  <div class="input-area">
+    <form onsubmit="sendMessage(event)">
+      <input id="questionInput" placeholder="اكتب سؤالك في الرياضيات..." />
+      <button><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 24 24">
+        <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+      </svg></button>
+    </form>
+  </div>
+</div>
+
+<script>
+const webAppUrl =
+"https://script.google.com/macros/s/AKfycbxuenD--XAWb_p9-4_Izg_TLRj3sAMNOKnO9bFUQrgr2RSz87WIq7c2_cOxQXyYtddX/exec";
+
+let chats = JSON.parse(localStorage.getItem("chats")) || [];
+let currentChat = null;
+
+const chatArea = document.getElementById("chatArea");
+const chatHistory = document.getElementById("chatHistory");
+
+/* ===== Init ===== */
+renderHistory();
+if(!chats.length) createNewChat();
+else openChat(chats[0].id);
+
+/* ===== Chat Functions ===== */
+function createNewChat(){
+  const chat = {
+    id: Date.now(),
+    title: "محادثة جديدة",
+    messages:[]
+  };
+  chats.unshift(chat);
+  currentChat = chat;
+  save();
+  renderHistory();
+  renderChat();
+}
+
+function openChat(id){
+  currentChat = chats.find(c=>c.id===id);
+  renderHistory();
+  renderChat();
+}
+
+function renderHistory(){
+  chatHistory.innerHTML="";
+  chats.forEach(chat=>{
+    const div=document.createElement("div");
+    div.className="chat-item"+(chat===currentChat?" active":"");
+    div.textContent=chat.title;
+    div.onclick=()=>openChat(chat.id);
+    chatHistory.appendChild(div);
+  });
+}
+
+function renderChat(){
+  chatArea.innerHTML="";
+  currentChat.messages.forEach(m=>{
+    const div=document.createElement("div");
+    div.className="message "+m.role;
+
+    if(m.role==="bot"){
+      div.innerHTML = formatAnswer(m.text);
+    }else{
+      div.textContent = m.text;
+    }
+
+    chatArea.appendChild(div);
+  });
+  chatArea.scrollTop=chatArea.scrollHeight;
+}
+
+/* ===== Formatter (الأهم) ===== */
+function formatAnswer(text){
+  const lines = text.split("\n").filter(l=>l.trim()!=="");
+  let html = `<div class="formatted">`;
+
+  lines.forEach(line=>{
+    if(line.includes("حل")){
+      html += `<h3>${line}</h3>`;
+    }
+    else if(line.includes("النتيجة")){
+      html += `<div class="result">${line}</div>`;
+    }
+    else if(line.includes("الخطوة")){
+      html += `<div class="step"><strong>${line}</strong></div>`;
+    }
+    else{
+      html += `<div class="step">${line}</div>`;
+    }
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+/* ===== Send Message ===== */
+function sendMessage(e){
+  e.preventDefault();
+  const input=document.getElementById("questionInput");
+  const text=input.value.trim();
+  if(!text) return;
+
+  currentChat.messages.push({role:"user",text});
+  if(currentChat.messages.length===1)
+    currentChat.title=text.slice(0,25)+"...";
+
+  renderChat();
+  input.value="";
+
+  fetch(webAppUrl,{
+    method:"POST",
+    body:JSON.stringify({type:"text",question:text})
+  })
+  .then(res=>res.text())
+  .then(answer=>{
+    currentChat.messages.push({role:"bot",text:answer});
+    save();
+    renderChat();
+  })
+  .catch(()=>{
+    currentChat.messages.push({role:"bot",text:"❌ حدث خطأ"});
+    renderChat();
+  });
+}
+
+function save(){
+  localStorage.setItem("chats",JSON.stringify(chats));
+}
+</script>
+
+</body>
+</html>
